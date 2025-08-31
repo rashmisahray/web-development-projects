@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Super Calculator — Rashmi</title>
+  <style>
+    :root{
+      --bg:#0f1724; --panel:#0b1220; --accent:#ffb86b; --text:#e6eef8; --muted:#9aa6b2;
+      --btn:#1f2937; --btn-plain:#2b3440; --success:#22c55e;
+    }
+    *{box-sizing:border-box;font-family:Inter,Segoe UI,Arial;}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#071226);color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+    .app{width:950px;max-width:100%;display:grid;grid-template-columns:420px 1fr;gap:20px}
+    .panel{background:linear-gradient(180deg,var(--panel),#081423);border-radius:14px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+
+    /* Calculator panel */
+    .calc-display{background:rgba(255,255,255,0.03);border-radius:10px;padding:14px 12px;margin-bottom:12px;min-height:72px;display:flex;flex-direction:column;justify-content:center}
+    .expr{font-size:18px;color:var(--muted);min-height:22px;overflow:hidden;text-overflow:ellipsis}
+    .result{font-size:28px;font-weight:700}
+
+    .keys{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+    .btn{background:var(--btn);border-radius:8px;padding:14px;font-size:18px;border:none;color:var(--text);cursor:pointer;box-shadow:inset 0 -2px 0 rgba(0,0,0,0.2)}
+    .btn-plain{background:var(--btn-plain)}
+    .btn-accent{background:linear-gradient(180deg,#ffb86b,#ff9e4a);color:#081226;font-weight:700}
+    .btn-op{background:rgba(255,255,255,0.03)}
+    .btn-wide{grid-column:span 2}
+    .small{padding:8px;font-size:14px}
+
+    /* Right side tools */
+    .tools{display:flex;flex-direction:column;height:100%}
+    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tab{flex:1;padding:8px 12px;text-align:center;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer}
+    .tab.active{background:linear-gradient(90deg,#072a3a,#053143);box-shadow:inset 0 -2px 0 rgba(0,0,0,0.4)}
+    .tool-card{background:linear-gradient(180deg,#071824,#021017);border-radius:10px;padding:16px;flex:1;overflow:auto}
+    .row{display:flex;gap:8px;margin-bottom:8px}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input,select{background:#07202a;border:1px solid rgba(255,255,255,0.03);color:var(--text);padding:8px;border-radius:8px;width:100%}
+    .primary{background:var(--accent);color:#081226;padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+    .history{max-height:140px;overflow:auto;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px}
+    .hist-item{padding:6px 8px;border-bottom:1px dashed rgba(255,255,255,0.02);font-size:13px;color:var(--muted)}
+
+    footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
+
+    @media(max-width:900px){.app{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div>
+          <div style="font-size:12px;color:var(--muted)">Super Calculator</div>
+          <div style="font-weight:700">Rashmi</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--muted)">Mode</div>
+          <button id="toggleTheme" class="btn small btn-plain">Dark</button>
+        </div>
+      </div>
+
+      <div class="calc-display">
+        <div class="expr" id="expression">0</div>
+        <div class="result" id="result">0</div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1"><input id="calcMemory" placeholder="Memory" readonly style="background:#021017;color:var(--muted);padding:8px;border-radius:8px"/></div>
+        <button id="memSave" class="btn">M+</button>
+        <button id="memClear" class="btn btn-plain">MC</button>
+      </div>
+
+      <div class="keys">
+        <!-- row 1 -->
+        <button class="btn btn-plain" data-key="(" title="Open bracket">(</button>
+        <button class="btn btn-plain" data-key=")" title="Close bracket">)</button>
+        <button class="btn btn-plain" id="back" title="Backspace">⌫</button>
+        <button class="btn btn-op" data-key="%">%</button>
+        <button class="btn btn-accent" id="clearAll">C</button>
+
+        <!-- row 2 -->
+        <button class="btn" data-key="7">7</button>
+        <button class="btn" data-key="8">8</button>
+        <button class="btn" data-key="9">9</button>
+        <button class="btn btn-op" data-key="/">÷</button>
+        <button class="btn btn-plain" data-func="sqrt">√</button>
+
+        <!-- row 3 -->
+        <button class="btn" data-key="4">4</button>
+        <button class="btn" data-key="5">5</button>
+        <button class="btn" data-key="6">6</button>
+        <button class="btn btn-op" data-key="*">×</button>
+        <button class="btn btn-plain" data-func="pow2">x²</button>
+
+        <!-- row 4 -->
+        <button class="btn" data-key="1">1</button>
+        <button class="btn" data-key="2">2</button>
+        <button class="btn" data-key="3">3</button>
+        <button class="btn btn-op" data-key="-">−</button>
+        <button class="btn btn-plain" data-func="pow">^</button>
+
+        <!-- row 5 -->
+        <button class="btn" data-key="0">0</button>
+        <button class="btn" data-key=".">.</button>
+        <button class="btn btn-wide" id="equals">=</button>
+        <button class="btn btn-op" data-key="+">+</button>
+        <button class="btn btn-plain" data-func="log">log</button>
+
+        <!-- row 6 scientific -->
+        <button class="btn btn-plain" data-func="sin">sin</button>
+        <button class="btn btn-plain" data-func="cos">cos</button>
+        <button class="btn btn-plain" data-func="tan">tan</button>
+        <button class="btn btn-plain" data-func="exp">eˣ</button>
+        <button class="btn btn-plain" data-func="inv">1/x</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+        <div style="flex:1">
+          <div class="history" id="history"></div>
+        </div>
+        <div style="width:120px;text-align:center">
+          <div style="font-size:12px;color:var(--muted)">Last Result</div>
+          <div id="lastRes" style="font-weight:700;font-size:18px;margin-top:6px">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel tools">
+      <div class="tabs">
+        <div class="tab active" data-tab="bmi">BMI</div>
+        <div class="tab" data-tab="currency">Currency</div>
+        <div class="tab" data-tab="gst">GST</div>
+        <div class="tab" data-tab="loan">Loan</div>
+      </div>
+
+      <div class="tool-card" id="bmi">
+        <h3>BMI Calculator</h3>
+        <div class="row">
+          <div style="flex:1">
+            <label>Weight (kg)</label>
+            <input id="b_weight" type="number" placeholder="e.g. 60">
+          </div>
+          <div style="width:16px"></div>
+          <div style="flex:1">
+            <label>Height (cm)</label>
+            <input id="b_height" type="number" placeholder="e.g. 165">
+          </div>
+        </div>
+        <button class="primary" id="calcBmiBtn">Calculate BMI</button>
+        <div style="margin-top:10px" id="bmiRes"></div>
+      </div>
+
+      <div class="tool-card" id="currency" style="display:none">
+        <h3>Currency Converter (fixed rates)</h3>
+        <div class="row">
+          <div style="flex:1">
+            <label>Amount (INR)</label>
+            <input id="cur_inr" type="number" placeholder="e.g. 1000">
+          </div>
+          <div style="flex:1">
+            <label>Convert to</label>
+            <select id="cur_to">
+              <option>USD</option>
+              <option>EUR</option>
+              <option>JPY</option>
+            </select>
+          </div>
+        </div>
+        <button class="primary" id="convBtn">Convert</button>
+        <div style="margin-top:10px" id="convRes"></div>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+        <div style="font-size:13px;color:var(--muted)">Note: Rates are static. You can later plug an API for live rates.</div>
+      </div>
+
+      <div class="tool-card" id="gst" style="display:none">
+        <h3>GST Calculator</h3>
+        <label>Price (₹)</label>
+        <input id="gst_price" type="number" placeholder="1000">
+        <label style="margin-top:8px">GST Rate (%)</label>
+        <input id="gst_rate" type="number" placeholder="e.g. 18" value="18">
+        <button class="primary" id="gstBtn">Calculate</button>
+        <div id="gstRes" style="margin-top:10px"></div>
+      </div>
+
+      <div class="tool-card" id="loan" style="display:none">
+        <h3>Loan / EMI Calculator</h3>
+        <label>Principal (₹)</label>
+        <input id="loan_p" type="number" placeholder="e.g. 500000">
+        <label>Annual Rate (%)</label>
+        <input id="loan_r" type="number" placeholder="e.g. 7.5">
+        <label>Tenure (years)</label>
+        <input id="loan_n" type="number" placeholder="e.g. 10">
+        <button class="primary" id="loanBtn">Calculate EMI</button>
+        <div id="loanRes" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Calculator logic ---
+    const exprEl = document.getElementById('expression');
+    const resEl = document.getElementById('result');
+    const historyEl = document.getElementById('history');
+    const lastResEl = document.getElementById('lastRes');
+    const memField = document.getElementById('calcMemory');
+
+    let expr = '';
+    let hist = [];
+    let memory = '';
+
+    function updateDisplay(){
+      exprEl.textContent = expr || '0';
+      resEl.textContent = expr ? tryEval(expr) : '0';
+    }
+
+    function safeEval(s){
+      // Replace unicode operators with JS equivalents
+      return Function('return (' + s.replace(/×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**') + ')')();
+    }
+
+    function tryEval(s){
+      try{ let v = safeEval(s); if(v===undefined) return '0'; return Number.isFinite(v)?String(round(v,8)): 'NaN'; }catch(e){return ''}
+    }
+
+    function round(v,dec){return Math.round(v*Math.pow(10,dec))/Math.pow(10,dec)}
+
+    document.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',e=>{
+      const k = b.getAttribute('data-key');
+      expr += k; updateDisplay();
+    }));
+
+    document.querySelectorAll('[data-func]').forEach(b=>b.addEventListener('click',e=>{
+      const f = b.getAttribute('data-func');
+      try{
+        let val = tryEval(expr) || 0;
+        if(f==='sqrt') val = Math.sqrt(Number(val));
+        if(f==='pow2') val = Math.pow(Number(val),2);
+        if(f==='pow') { expr += '^'; updateDisplay(); return; }
+        if(f==='log') val = Math.log(Number(val));
+        if(f==='sin') val = Math.sin(toRad(Number(val)));
+        if(f==='cos') val = Math.cos(toRad(Number(val)));
+        if(f==='tan') val = Math.tan(toRad(Number(val)));
+        if(f==='exp') val = Math.exp(Number(val));
+        if(f==='inv') val = 1/Number(val);
+        expr = String(val); updateDisplay();
+      }catch(e){alert('Invalid function input')}
+    }));
+
+    document.getElementById('clearAll').addEventListener('click',()=>{expr='';updateDisplay();});
+    document.getElementById('back').addEventListener('click',()=>{expr = expr.slice(0,-1);updateDisplay();});
+
+    document.getElementById('equals').addEventListener('click',()=>{
+      try{
+        const value = safeEval(expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**'));
+        const out = Number.isFinite(value)?round(value,8):value;
+        resEl.textContent = out;
+        lastResEl.textContent = out;
+        hist.unshift(expr + ' = ' + out);
+        if(hist.length>10) hist.pop();
+        renderHistory();
+        expr = String(out);
+      }catch(e){alert('Invalid Expression')}
+    });
+
+    function renderHistory(){ historyEl.innerHTML = hist.map(h=>'<div class="hist-item">'+h+'</div>').join(''); }
+
+    // memory
+    document.getElementById('memSave').addEventListener('click',()=>{ memory = resEl.textContent; memField.value = memory; });
+    document.getElementById('memClear').addEventListener('click',()=>{ memory=''; memField.value=''; });
+
+    // helper
+    function toRad(d){return d*Math.PI/180}
+
+    // --- Tools logic ---
+    // Tabs
+    document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const tab = t.getAttribute('data-tab');
+      ['bmi','currency','gst','loan'].forEach(k=>document.getElementById(k).style.display = (k===tab)?'block':'none');
+    }));
+
+    // BMI
+    document.getElementById('calcBmiBtn').addEventListener('click',()=>{
+      const w = Number(document.getElementById('b_weight').value);
+      const hcm = Number(document.getElementById('b_height').value);
+      if(!w||!hcm){alert('Enter valid values');return}
+      const h = hcm/100;
+      const bmi = w/(h*h);
+      let cat = '';
+      if(bmi<18.5) cat='Underweight'; else if(bmi<25) cat='Normal'; else if(bmi<30) cat='Overweight'; else cat='Obese';
+      document.getElementById('bmiRes').innerHTML = `<strong>BMI:</strong> ${bmi.toFixed(2)} — ${cat}`;
+    });
+
+    // Currency (static rates)
+    const rates = {USD:83, EUR:90, JPY:0.56};
+    document.getElementById('convBtn').addEventListener('click',()=>{
+      const inr = Number(document.getElementById('cur_inr').value);
+      const to = document.getElementById('cur_to').value;
+      if(!inr){alert('Enter INR amount');return}
+      const out = inr / (rates[to] || 1);
+      document.getElementById('convRes').innerHTML = `<strong>${inr} INR = ${out.toFixed(4)} ${to}</strong>`;
+    });
+
+    // GST
+    document.getElementById('gstBtn').addEventListener('click',()=>{
+      const p = Number(document.getElementById('gst_price').value);
+      const r = Number(document.getElementById('gst_rate').value);
+      if(!p||!r){alert('Enter valid values');return}
+      const total = p * (1 + r/100);
+      document.getElementById('gstRes').innerHTML = `<strong>Total:</strong> ₹${total.toFixed(2)} (GST ₹${(total-p).toFixed(2)})`;
+    });
+
+    // Loan EMI
+    document.getElementById('loanBtn').addEventListener('click',()=>{
+      const P = Number(document.getElementById('loan_p').value);
+      const annual = Number(document.getElementById('loan_r').value);
+      const years = Number(document.getElementById('loan_n').value);
+      if(!P||!annual||!years){alert('Enter valid values');return}
+      const r = annual/12/100; const n = years*12;
+      const emi = (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+      const total = emi*n; const interest = total-P;
+      document.getElementById('loanRes').innerHTML = `<strong>EMI:</strong> ₹${emi.toFixed(2)} / month<br><strong>Total Payable:</strong> ₹${total.toFixed(2)}<br><strong>Interest:</strong> ₹${interest.toFixed(2)}`;
+    });
+
+    // Theme toggle (simple color inversion example)
+    document.getElementById('toggleTheme').addEventListener('click',()=>{
+      document.body.classList.toggle('light');
+      if(document.body.classList.contains('light')){
+        document.getElementById('toggleTheme').textContent='Light';
+        document.documentElement.style.setProperty('--bg','#f6fbff');
+        document.documentElement.style.setProperty('--panel','#ffffff');
+        document.documentElement.style.setProperty('--accent','#0ea5a4');
+        document.documentElement.style.setProperty('--text','#07223a');
+        document.documentElement.style.setProperty('--muted','#475569');
+        document.documentElement.style.setProperty('--btn','#e6eef8');
+        document.documentElement.style.setProperty('--btn-plain','#f1f8fb');
+      } else {
+        document.getElementById('toggleTheme').textContent='Dark';
+        document.documentElement.style.setProperty('--bg','#0f1724');
+        document.documentElement.style.setProperty('--panel','#0b1220');
+        document.documentElement.style.setProperty('--accent','#ffb86b');
+        document.documentElement.style.setProperty('--text','#e6eef8');
+        document.documentElement.style.setProperty('--muted','#9aa6b2');
+        document.documentElement.style.setProperty('--btn','#1f2937');
+        document.documentElement.style.setProperty('--btn-plain','#2b3440');
+      }
+    });
+
+    // Pre-fill with a sample expression
+    expr = '12+7*3'; updateDisplay();
+  </script>
+  
+</body>
+</html>
+
