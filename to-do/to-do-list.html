@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloom To‑Do • Calendar • Points</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-3Z9iQf9FQzYqK0wQkKzX1R7a/OJK7cH2tLw9b0Fq3o1t1k3S6nA0m2Qp2P0Qp3cY6Xo0v6nQxk3lTgYJxQbqMw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root{
+      --bg: #fff7fb;
+      --card: #ffffff;
+      --text: #3a2a2f;
+      --muted:#7a5a66;
+      --ring:#f3c3db;
+      --accent:#ff82b2; /* candy pink */
+      --accent-2:#e3a7ff; /* lilac */
+      --accent-3:#ffd1e6; /* blush */
+      --success:#2bb673;
+      --danger:#ff4d6d;
+      --shadow: 0 10px 25px rgba(238, 159, 201, .25), 0 2px 8px rgba(0,0,0,.05);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:
+        radial-gradient(1200px 800px at 10% -10%, #ffe6f3 0, transparent 60%),
+        radial-gradient(800px 800px at 110% 0%, #f3e5ff 0, transparent 50%),
+        var(--bg);
+      font-family:"Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter:saturate(1.2) blur(10px);
+      border-bottom:1px solid #f6d6e7;
+      background:linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.65));
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:14px 18px;}
+    .topbar{display:flex; align-items:center; gap:14px;}
+    .brand{
+      display:flex; align-items:center; gap:10px; font-weight:700;
+    }
+    .brand .logo{
+      width:38px; height:38px; border-radius:50%;
+      background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent), var(--accent-3));
+      box-shadow:var(--shadow);
+      display:grid; place-items:center; color:white;
+    }
+    .brand span{font-family:"Pacifico", cursive; font-size:22px; letter-spacing:.3px}
+    .actions{margin-left:auto; display:flex; gap:10px;}
+    .btn{display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; border:1px solid #f3cade; background:#fff; cursor:pointer; transition:.2s transform, .2s box-shadow; box-shadow: var(--shadow)}
+    .btn:hover{transform:translateY(-1px)}
+
+    main{max-width:1200px; margin:18px auto; padding:0 18px;}
+    .grid{display:grid; grid-template-columns: 320px 1fr; gap:18px;}
+
+    /* Panels */
+    .panel{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;}
+    .panel h3{margin:0 0 12px; font-size:18px}
+    .subtle{color:var(--muted); font-size:13px}
+
+    /* Calendar */
+    .calendar{display:flex; flex-direction:column; gap:10px}
+    .cal-head{display:flex; align-items:center; justify-content:space-between}
+    .cal-nav{display:flex; align-items:center; gap:8px}
+    .icon-btn{width:34px; height:34px; display:grid; place-items:center; border-radius:10px; border:1px solid #f3cade; background:#fff; cursor:pointer}
+    .month-label{font-weight:700}
+    .week{display:grid; grid-template-columns: repeat(7, 1fr); gap:6px;}
+    .dow, .day{aspect-ratio:1/1; display:grid; place-items:center; border-radius:12px; font-size:12px}
+    .dow{color:#9a7c87; font-weight:600}
+    .day{background:#fff; border:1px solid #f5d4e6; cursor:pointer; position:relative}
+    .day:hover{box-shadow:inset 0 0 0 2px var(--accent-3)}
+    .day.out{opacity:.4}
+    .day.selected{outline:2px solid var(--accent); outline-offset:0}
+    .dot{position:absolute; bottom:6px; width:6px; height:6px; border-radius:50%; background:var(--accent)}
+
+    /* Task Manager */
+    .task-panel{display:grid; grid-template-columns: 1.2fr .8fr; gap:18px}
+    .input-row{display:grid; grid-template-columns: 1fr 120px 120px 100px auto; gap:10px}
+    input[type="text"], select{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid #f2cde1; background:#fff; outline:none;
+    }
+    .add-btn{background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; border:none; padding:12px 16px; border-radius:12px; cursor:pointer; font-weight:700; box-shadow:var(--shadow)}
+    .task-list{display:flex; flex-direction:column; gap:10px; max-height:420px; overflow:auto; padding-right:6px}
+    .task{
+      display:grid; grid-template-columns: 28px 1fr auto auto; align-items:center; gap:10px; padding:12px; border:1px solid #f3cade; border-radius:14px; background:#fff;
+    }
+    .task.done{opacity:.6; text-decoration:line-through}
+    .pill{font-size:12px; padding:6px 10px; border-radius:999px; background:#ffe8f2; border:1px solid #ffd3e7}
+    .priority-High{background:#ffe4ea; border-color:#ffc6d8}
+    .priority-Medium{background:#f2e9ff; border-color:#e3d5ff}
+    .priority-Low{background:#e9fff3; border-color:#d0ffe8}
+    .points{font-weight:700}
+    .icon{cursor:pointer; padding:6px 8px; border-radius:10px}
+    .icon:hover{background:#fff1f7}
+
+    /* Progress */
+    .progress{display:grid; grid-template-columns: 280px 1fr; gap:18px}
+    .ring{
+      width:220px; height:220px; border-radius:50%;
+      background:conic-gradient(var(--accent) 0deg, var(--accent) var(--pct,0deg), #ffe6f2 var(--pct,0deg));
+      display:grid; place-items:center; margin:0 auto; box-shadow:var(--shadow);
+    }
+    .ring-inner{width:170px; height:170px; border-radius:50%; background:#fff; display:grid; place-items:center; text-align:center;}
+    .ring-inner .big{font-size:30px; font-weight:800}
+    .stats{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
+    .stat{padding:12px; border-radius:14px; background:#fff; border:1px solid #f3cade; text-align:center}
+
+    canvas{width:100%; height:240px; border-radius:14px; background:#fff; border:1px solid #f3cade}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr}
+      .task-panel{grid-template-columns: 1fr}
+      .input-row{grid-template-columns: 1fr 1fr 1fr 1fr auto}
+    }
+    @media (max-width: 640px){
+      .input-row{grid-template-columns: 1fr 1fr;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <div class="brand">
+        <div class="logo"><i class="fa-solid fa-heart"></i></div>
+        <span>Bloom Planner</span>
+      </div>
+      <div class="actions">
+        <button class="btn" id="todayBtn"><i class="fa-regular fa-calendar"></i> Today</button>
+        <button class="btn" id="clearBtn" title="Reset all data (saved locally)"><i class="fa-solid fa-broom"></i> Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- LEFT: Calendar -->
+      <section class="panel calendar">
+        <div class="cal-head">
+          <div>
+            <div class="subtle">Calendar</div>
+            <div class="month-label" id="monthLabel">Month YYYY</div>
+          </div>
+          <div class="cal-nav">
+            <button class="icon-btn" id="prevMonth"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="icon-btn" id="nextMonth"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="week" id="dow"></div>
+        <div id="calendarGrid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:6px"></div>
+        <div class="subtle">Selected date: <span id="selectedDateLabel"></span></div>
+      </section>
+
+      <!-- RIGHT: Task manager + Progress -->
+      <section class="panel">
+        <h3>Task Manager</h3>
+        <div class="subtle">Add tasks for the selected date. Completing tasks awards points. High = 20, Medium = 10, Low = 5.</div>
+        <div class="task-panel" style="margin-top:12px">
+          <div>
+            <div class="input-row">
+              <input id="taskTitle" type="text" placeholder="Task title (e.g., Revise DSA arrays)" />
+              <select id="taskCategory">
+                <option value="Study">Study</option>
+                <option value="Work">Work</option>
+                <option value="Health">Health</option>
+                <option value="Personal">Personal</option>
+              </select>
+              <select id="taskPriority">
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </select>
+              <select id="taskPoints">
+                <option value="20">20</option>
+                <option value="10">10</option>
+                <option value="5">5</option>
+              </select>
+              <button class="add-btn" id="addTask"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+            <div class="task-list" id="taskList" style="margin-top:12px"></div>
+          </div>
+
+          <!-- Progress / Month view -->
+          <div>
+            <h3 style="margin-top:0">Monthly Progress</h3>
+            <div class="subtle">Set a monthly goal to watch your ring bloom.</div>
+            <div style="display:flex; align-items:center; gap:14px; margin:10px 0 16px">
+              <input id="goalInput" type="number" min="50" step="10" placeholder="Monthly goal (pts)" />
+              <button class="btn" id="saveGoal"><i class="fa-regular fa-floppy-disk"></i> Save Goal</button>
+            </div>
+            <div class="ring" id="ring"><div class="ring-inner">
+              <div class="subtle">This Month</div>
+              <div class="big" id="monthPoints">0</div>
+              <div class="subtle"><span id="monthGoal">/ 300</span> pts</div>
+            </div></div>
+
+            <div class="stats" style="margin-top:12px">
+              <div class="stat"><div class="subtle">Completed</div><div class="big" id="completedCount">0</div></div>
+              <div class="stat"><div class="subtle">Streak</div><div class="big" id="streakDays">0🔥</div></div>
+              <div class="stat"><div class="subtle">Best Day</div><div class="big" id="bestDay">—</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" style="margin-top:18px">
+      <h3>Monthly Points Timeline</h3>
+      <div class="subtle">Each bar shows total points earned per day this month.</div>
+      <canvas id="chart" width="1000" height="300"></canvas>
+    </section>
+  </main>
+
+  <script>
+    // ---------- Helpers ----------
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => Array.from(document.querySelectorAll(q));
+    const pad = (n) => String(n).padStart(2, '0');
+    const toKey = (d) => [d.getFullYear(), pad(d.getMonth()+1), pad(d.getDate())].join('-');
+
+    const STORAGE_KEY = 'bloom_planner_v1';
+
+    const now = new Date();
+    let current = new Date(now.getFullYear(), now.getMonth(), 1);
+    let selected = new Date();
+
+    const state = {
+      goal: 300,
+      tasks: { /* 'YYYY-MM-DD': [ {id, title, cat, prio, points, done} ] */ }
+    }
+
+    // Load
+    const load = () => {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        const saved = JSON.parse(raw);
+        Object.assign(state, saved);
+      }
+    }
+    const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+    // ---------- Calendar ----------
+    const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const renderCalendar = () => {
+      // DOW header
+      const dow = $('#dow'); dow.innerHTML = DOW.map(d=>`<div class="dow">${d}</div>`).join('');
+
+      const grid = $('#calendarGrid'); grid.innerHTML = '';
+      const y = current.getFullYear();
+      const m = current.getMonth();
+      const first = new Date(y, m, 1);
+      const startDay = first.getDay();
+      const daysInMonth = new Date(y, m+1, 0).getDate();
+      const prevDays = new Date(y, m, 0).getDate();
+
+      $('#monthLabel').textContent = first.toLocaleString(undefined, {month:'long', year:'numeric'});
+
+      const selectedKey = toKey(selected);
+
+      // Fill 42 cells (6 weeks)
+      for(let i=0;i<42;i++){
+        const cell = document.createElement('div');
+        cell.className = 'day';
+        let dateNum, cellDate;
+        if(i < startDay){
+          dateNum = prevDays - (startDay - 1 - i);
+          cell.classList.add('out');
+          cellDate = new Date(y, m-1, dateNum);
+        }else if(i >= startDay + daysInMonth){
+          dateNum = i - (startDay + daysInMonth) + 1;
+          cell.classList.add('out');
+          cellDate = new Date(y, m+1, dateNum);
+        }else{
+          dateNum = i - startDay + 1;
+          cellDate = new Date(y, m, dateNum);
+        }
+        const key = toKey(cellDate);
+        cell.textContent = dateNum;
+        if(key === selectedKey) cell.classList.add('selected');
+        // indicator dot if tasks exist or points earned
+        const has = (state.tasks[key]||[]);
+        const earned = has.filter(t=>t.done).reduce((s,t)=>s+t.points,0);
+        if(has.length){
+          const dot = document.createElement('div'); dot.className = 'dot';
+          dot.style.background = earned>0? 'linear-gradient(135deg, var(--accent), var(--accent-2))':'#ffd2e6';
+          cell.appendChild(dot);
+        }
+        cell.addEventListener('click', ()=>{ selected = cellDate; updateSelectedDateLabel(); renderCalendar(); renderTasks(); renderMonth(); drawChart(); });
+        grid.appendChild(cell);
+      }
+    }
+
+    const updateSelectedDateLabel = () => {
+      $('#selectedDateLabel').textContent = selected.toLocaleDateString(undefined, { weekday:'short', year:'numeric', month:'short', day:'numeric'});
+    }
+
+    // ---------- Tasks ----------
+    const renderTasks = () => {
+      const list = $('#taskList');
+      const key = toKey(selected);
+      const items = state.tasks[key] || [];
+      if(!state.tasks[key]) state.tasks[key] = [];
+      list.innerHTML = '';
+      items.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'task' + (item.done? ' done':'');
+        el.innerHTML = `
+          <input type="checkbox" ${item.done? 'checked':''} aria-label="done" />
+          <div>
+            <div style="font-weight:600">${item.title}</div>
+            <div class="subtle" style="margin-top:2px">${key} • <span class="pill priority-${item.prio}">${item.cat}</span> <span class="pill priority-${item.prio}">${item.prio}</span> <span class="pill">${item.points} pts</span></div>
+          </div>
+          <div class="points">${item.done? '+'+item.points:'—'}</div>
+          <div style="display:flex; gap:6px">
+            <span class="icon edit" title="Edit"><i class="fa-regular fa-pen-to-square"></i></span>
+            <span class="icon del" title="Delete"><i class="fa-regular fa-trash-can"></i></span>
+          </div>`;
+        const [checkbox] = el.getElementsByTagName('input');
+        checkbox.addEventListener('change', ()=>{
+          item.done = checkbox.checked;
+          save(); renderTasks(); renderMonth(); renderCalendar(); drawChart();
+        });
+        el.querySelector('.del').addEventListener('click', ()=>{
+          state.tasks[key] = items.filter(t=>t.id!==item.id);
+          save(); renderTasks(); renderMonth(); renderCalendar(); drawChart();
+        });
+        el.querySelector('.edit').addEventListener('click', ()=>{
+          const title = prompt('Edit title', item.title); if(title===null) return;
+          const prio = prompt('Priority (High/Medium/Low)', item.prio) || item.prio;
+          const points = parseInt(prompt('Points (number)', item.points) || item.points, 10);
+          item.title = title.trim()||item.title; item.prio = ['High','Medium','Low'].includes(prio)? prio: item.prio; item.points = isNaN(points)? item.points: points;
+          save(); renderTasks(); renderMonth(); renderCalendar(); drawChart();
+        })
+        list.appendChild(el);
+      })
+    }
+
+    const addTask = () => {
+      const title = $('#taskTitle').value.trim();
+      const cat = $('#taskCategory').value;
+      const prio = $('#taskPriority').value;
+      const points = parseInt($('#taskPoints').value,10);
+      if(!title) { alert('Please enter a task title ✨'); return; }
+      const key = toKey(selected);
+      if(!state.tasks[key]) state.tasks[key] = [];
+      state.tasks[key].push({ id: crypto.randomUUID(), title, cat, prio, points, done:false });
+      $('#taskTitle').value = '';
+      save(); renderTasks(); renderMonth(); renderCalendar(); drawChart();
+    }
+
+    // ---------- Month Summary ----------
+    const monthData = () => {
+      const y = current.getFullYear();
+      const m = current.getMonth();
+      const daysInMonth = new Date(y,m+1,0).getDate();
+      const totals = Array.from({length:daysInMonth}, (_,i)=>{
+        const key = `${y}-${pad(m+1)}-${pad(i+1)}`;
+        const pts = (state.tasks[key]||[]).filter(t=>t.done).reduce((s,t)=>s+t.points,0);
+        const done = (state.tasks[key]||[]).filter(t=>t.done).length;
+        return { day:i+1, key, points: pts, done };
+      });
+      return totals;
+    }
+
+    const computeStreak = () => {
+      // count consecutive days ending today with points > 0
+      let streak = 0;
+      const today = new Date();
+      for(let i=0;i<365;i++){
+        const d = new Date(today); d.setDate(d.getDate()-i);
+        const pts = (state.tasks[toKey(d)]||[]).filter(t=>t.done).reduce((s,t)=>s+t.points,0);
+        if(pts>0) streak++; else break;
+      }
+      return streak;
+    }
+
+    const renderMonth = () => {
+      // Points & goal ring
+      const data = monthData();
+      const total = data.reduce((s,d)=>s+d.points,0);
+      const goal = state.goal || 300;
+      const pct = Math.min(1, total/goal);
+      $('#monthPoints').textContent = total;
+      $('#monthGoal').textContent = ` / ${goal}`;
+      const deg = (pct*360).toFixed(1)+'deg';
+      $('#ring').style.setProperty('--pct', deg);
+
+      // Stats
+      const completed = data.reduce((s,d)=>s+d.done,0);
+      $('#completedCount').textContent = completed;
+      $('#streakDays').textContent = computeStreak() + '🔥';
+      const best = data.reduce((a,b)=> a.points>b.points? a:b, {points:0, day:'—'});
+      $('#bestDay').textContent = best.points? `${best.day} (${best.points})` : '—';
+    }
+
+    // ---------- Simple Bar Chart (Canvas) ----------
+    const drawChart = () => {
+      const c = document.getElementById('chart');
+      const ctx = c.getContext('2d');
+      // clear
+      ctx.clearRect(0,0,c.width,c.height);
+      const W = c.width, H = c.height;
+      // axes
+      ctx.lineWidth = 1; ctx.strokeStyle = '#f0b7d4';
+      ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, H-40); ctx.lineTo(W-20, H-40); ctx.stroke();
+
+      const data = monthData();
+      const max = Math.max(20, ...data.map(d=>d.points));
+      const barW = (W-80)/data.length;
+      ctx.fillStyle = ctx.createLinearGradient(0,0,0,H);
+      ctx.fillStyle.addColorStop(0, '#ff82b2');
+      ctx.fillStyle.addColorStop(1, '#e3a7ff');
+      ctx.font = '12px Plus Jakarta Sans';
+      ctx.textAlign = 'center';
+
+      data.forEach((d,i)=>{
+        const x = 40 + i*barW + barW*0.1;
+        const h = ((H-80) * d.points) / max;
+        const y = (H-40) - h;
+        // bar
+        const radius = 6;
+        // rounded bar
+        const w = barW*0.8;
+        const r = Math.min(radius, w/2, h);
+        ctx.beginPath();
+        ctx.moveTo(x, y + h);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h);
+        ctx.closePath();
+        ctx.fill();
+
+        // tiny label when points > 0
+        if(d.points>0){ ctx.fillStyle = '#7a5a66'; ctx.fillText(d.points, x + w/2, y - 6); ctx.fillStyle = ctx.createLinearGradient(0,0,0,H); ctx.fillStyle.addColorStop(0, '#ff82b2'); ctx.fillStyle.addColorStop(1, '#e3a7ff'); }
+        // day labels (every 2 days for clarity)
+        if((i+1)%2===0){ ctx.fillStyle = '#9a7c87'; ctx.fillText(d.day, x + w/2, H-22); ctx.fillStyle = ctx.createLinearGradient(0,0,0,H); ctx.fillStyle.addColorStop(0, '#ff82b2'); ctx.fillStyle.addColorStop(1, '#e3a7ff'); }
+      });
+    }
+
+    // ---------- Events ----------
+    $('#prevMonth').addEventListener('click', ()=>{ current.setMonth(current.getMonth()-1); renderCalendar(); renderMonth(); drawChart(); });
+    $('#nextMonth').addEventListener('click', ()=>{ current.setMonth(current.getMonth()+1); renderCalendar(); renderMonth(); drawChart(); });
+    $('#todayBtn').addEventListener('click', ()=>{ current = new Date(now.getFullYear(), now.getMonth(), 1); selected = new Date(); renderCalendar(); updateSelectedDateLabel(); renderTasks(); renderMonth(); drawChart(); });
+
+    $('#addTask').addEventListener('click', addTask);
+    $('#taskTitle').addEventListener('keydown', (e)=>{ if(e.key==='Enter') addTask(); });
+
+    $('#saveGoal').addEventListener('click', ()=>{
+      const n = parseInt($('#goalInput').value, 10);
+      if(!isNaN(n) && n>0){ state.goal = n; save(); renderMonth(); }
+    });
+
+    $('#clearBtn').addEventListener('click', ()=>{
+      if(confirm('This will erase all your local data. Continue?')){
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    })
+
+    // ---------- Init ----------
+    load();
+    updateSelectedDateLabel();
+    renderCalendar();
+    renderTasks();
+    renderMonth();
+    drawChart();
+  </script>
+</body>
+</html>
