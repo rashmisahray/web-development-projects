@@ -1,7 +1,6 @@
 # Bloom Planner  
 
-Bloom Planner is a task and productivity tracker with a points-based system. 
-It helps you plan your tasks, track progress, and stay motivated with streaks, goals, and visual analytics.  
+Bloom Planner is a task and productivity tracker with a points-based system. It helps you plan your tasks, track progress, and stay motivated with streaks, goals, and visual analytics.  
 
 ---
 
@@ -14,6 +13,11 @@ It helps you plan your tasks, track progress, and stay motivated with streaks, g
 - Best Day highlight to identify your most productive day  
 - Monthly Points Timeline to visualize productivity  
 
+---
+
+## Getting Started  
+
+### Clone the Repository  
 ```bash
 git clone https://github.com/your-username/bloom-planner.git
 cd bloom-planner
