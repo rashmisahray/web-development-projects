@@ -1,6 +1,7 @@
 # Bloom Planner  
 
-Bloom Planner is a task and productivity tracker with a points-based system. It helps you plan your tasks, track progress, and stay motivated with streaks, goals, and visual analytics.  
+Bloom Planner is a task and productivity tracker with a points-based system. 
+It helps you plan your tasks, track progress, and stay motivated with streaks, goals, and visual analytics.  
 
 ---
 
